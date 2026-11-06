@@ -1,0 +1,71 @@
+@startuml
+hide circle
+skinparam classAttributeIconSize 0
+
+enum Role {
+  TRAINEE
+  INSTRUCTOR
+  ADMIN
+}
+
+enum LeaveStatus {
+  OPEN
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+enum Decision {
+  APPROVED
+  REJECTED
+}
+
+class User {
+  id: Long
+  firstName: String
+  lastName: String
+  email: String
+  passwordHash: String
+  role: Role
+}
+
+class Trainee {
+  id: Long
+  trainingProgram: String
+  annualLeaveEntitlement: Decimal
+}
+
+class LeaveRequest {
+  id: Long
+  startDate: LocalDate
+  endDate: LocalDate
+  totalDays: Decimal
+  reason: String
+  status: LeaveStatus
+  createdAt: LocalDateTime
+}
+
+class Approval {
+  id: Long
+  decision: Decision
+  comment: String
+  decisionDate: LocalDateTime
+}
+
+User "1" -- "0..1" Trainee : trainee profile
+User "1" -- "0..*" Trainee : supervises
+Trainee "1" -- "0..*" LeaveRequest : submits
+LeaveRequest "1" -- "0..1" Approval : receives
+User "1" -- "0..*" Approval : decides
+
+note bottom of Trainee
+  The supervising user must
+  have the INSTRUCTOR role.
+end note
+
+note bottom of Approval
+  Only the assigned instructor
+  may decide an open request.
+end note
+
+@enduml

@@ -1,0 +1,75 @@
+@startuml
+start
+
+partition "Auszubildende" {
+  :Urlaubszeitraum eingeben;
+  :Optionale Bemerkung hinzufügen;
+}
+
+partition "System" {
+  :Zeitraum prüfen;
+  :Urlaubstage ohne Wochenenden\nund regionale Feiertage berechnen;
+  :Verfügbares Urlaubskontingent prüfen;
+}
+
+if (Angaben gültig und ausreichend Urlaub?) then (ja)
+  partition "Auszubildende" {
+    :Antrag absenden;
+  }
+
+  partition "System" {
+    :Antrag mit Status OPEN speichern;
+  }
+
+  if (Vor Bearbeitung zurückgezogen?) then (ja)
+    partition "System" {
+      :Berechtigung und Status prüfen;
+      :Status auf WITHDRAWN setzen;
+    }
+    stop
+  else (nein)
+    partition "Ausbilder" {
+      :Antrag öffnen und prüfen;
+    }
+
+    partition "System" {
+      :Zuordnung und Status OPEN prüfen;
+    }
+
+    if (Antrag genehmigen?) then (ja)
+      partition "System" {
+        :Urlaubskontingent erneut prüfen;
+      }
+
+      if (Ausreichend Urlaub verfügbar?) then (ja)
+        partition "System" {
+          :Genehmigung und Status APPROVED\nin einer Transaktion speichern;
+        }
+      else (nein)
+        partition "System" {
+          :Konflikt anzeigen;\nAntrag bleibt OPEN;
+        }
+        stop
+      endif
+    else (nein)
+      partition "Ausbilder" {
+        :Ablehnungsgrund eingeben;
+      }
+
+      partition "System" {
+        :Ablehnung und Status REJECTED\nin einer Transaktion speichern;
+      }
+    endif
+  endif
+
+  partition "Auszubildende" {
+    :Aktualisierten Status einsehen;
+  }
+else (nein)
+  partition "System" {
+    :Fehlermeldung anzeigen;
+  }
+endif
+
+stop
+@enduml

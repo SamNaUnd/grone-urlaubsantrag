@@ -1,0 +1,70 @@
+@startuml
+hide circle
+skinparam linetype ortho
+
+entity "users" as users {
+  * id : BIGINT <<PK>>
+  --
+  * first_name : VARCHAR
+  * last_name : VARCHAR
+  * email : VARCHAR <<UNIQUE>>
+  * password_hash : VARCHAR
+  * role : VARCHAR
+}
+
+entity "trainees" as trainees {
+  * id : BIGINT <<PK>>
+  --
+  * user_id : BIGINT <<FK, UNIQUE>>
+  * instructor_id : BIGINT <<FK>>
+  * training_program : VARCHAR
+  * training_location : VARCHAR
+  * federal_state : VARCHAR
+  * annual_leave_entitlement : NUMERIC
+}
+
+entity "leave_requests" as requests {
+  * id : BIGINT <<PK>>
+  --
+  * trainee_id : BIGINT <<FK>>
+  * start_date : DATE
+  * end_date : DATE
+  * total_days : NUMERIC
+  reason : TEXT
+  * status : VARCHAR
+  * created_at : TIMESTAMP
+}
+
+entity "approvals" as approvals {
+  * id : BIGINT <<PK>>
+  --
+  * leave_request_id : BIGINT <<FK, UNIQUE>>
+  * approver_id : BIGINT <<FK>>
+  * decision : VARCHAR
+  comment : TEXT
+  * decision_date : TIMESTAMP
+}
+
+users ||--o| trainees : "has trainee profile"
+users ||--o{ trainees : "supervises"
+trainees ||--o{ requests : "submits"
+requests ||--o| approvals : "receives"
+users ||--o{ approvals : "decides"
+
+note bottom of users
+  Roles: TRAINEE, INSTRUCTOR, ADMIN
+end note
+
+note bottom of requests
+  Status: OPEN, APPROVED,
+  REJECTED, WITHDRAWN
+
+  end_date >= start_date
+  total_days > 0
+end note
+
+note bottom of approvals
+  Decision: APPROVED or REJECTED
+  A rejection requires a reason.
+end note
+@enduml

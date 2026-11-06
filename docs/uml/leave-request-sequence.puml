@@ -1,0 +1,52 @@
+@startuml
+actor "Auszubildende" as Trainee
+participant "React Frontend" as Frontend
+participant "Spring Boot Backend" as Backend
+database "PostgreSQL" as DB
+participant "Nager.Date API" as Holidays
+
+Trainee -> Frontend : Urlaubszeitraum eingeben und absenden
+Frontend -> Backend : POST /api/leave-requests
+
+Backend -> Backend : Anmeldung und Rolle prüfen
+
+alt Nicht angemeldet oder nicht berechtigt
+  Backend --> Frontend : 401 oder 403
+  Frontend --> Trainee : Fehlermeldung anzeigen
+else Berechtigt
+  Backend -> Backend : Eingaben und Datumsbereich validieren
+
+  alt Ungültige Eingaben
+    Backend --> Frontend : 400 Bad Request
+    Frontend --> Trainee : Eingaben korrigieren
+  else Gültige Eingaben
+    Backend -> DB : Ausbildungsprofil und Standort laden
+    DB --> Backend : Profildaten
+
+    loop Für jedes betroffene Jahr
+      Backend -> Holidays : GET /api/v3/PublicHolidays/{year}/DE
+      Holidays --> Backend : Feiertage oder Fehler
+    end
+
+    alt Feiertage nicht zuverlässig verfügbar
+      Backend --> Frontend : 503 Service Unavailable
+      Frontend --> Trainee : Später erneut versuchen
+    else Feiertage verfügbar
+      Backend -> Backend : Regionale Feiertage filtern\nund Arbeitstage berechnen
+      Backend -> DB : Urlaubsanspruch und relevante Anträge laden
+      DB --> Backend : Daten zur Kontingentprüfung
+      Backend -> Backend : Antrag und Kontingent prüfen
+
+      alt Keine Urlaubstage oder Kontingent überschritten
+        Backend --> Frontend : 422 Unprocessable Entity
+        Frontend --> Trainee : Fehlermeldung anzeigen
+      else Antrag zulässig
+        Backend -> DB : Antrag mit Status OPEN speichern
+        DB --> Backend : Gespeicherter Antrag
+        Backend --> Frontend : 201 Created mit Antrag
+        Frontend --> Trainee : Bestätigung und Status anzeigen
+      end
+    end
+  end
+end
+@enduml

@@ -1,0 +1,51 @@
+@startuml
+left to right direction
+
+actor "Auszubildende" as Trainee
+actor "Ausbilder" as Instructor
+actor "Verwaltung" as Admin
+
+rectangle "Grone Urlaubsantrag" {
+  usecase "Anmelden" as Login
+  usecase "Persönliche Daten einsehen" as Profile
+  usecase "Urlaub beantragen" as Apply
+  usecase "Eigene Anträge einsehen" as OwnRequests
+  usecase "Offenen Antrag zurückziehen" as Withdraw
+  usecase "Resturlaub einsehen" as Balance
+
+  usecase "Zugeordnete Anträge prüfen" as Review
+  usecase "Antrag genehmigen" as Approve
+  usecase "Antrag ablehnen" as Reject
+  usecase "Urlaubshistorie einsehen" as History
+  usecase "Kommende Abwesenheiten einsehen" as Absences
+
+  usecase "Benutzer und Rollen verwalten" as Users
+  usecase "Ausbilder zuordnen" as Assign
+  usecase "Urlaubskontingente verwalten" as Entitlements
+  usecase "Alle Anträge einsehen" as AllRequests
+  usecase "Statistiken einsehen" as Statistics
+}
+
+Trainee --> Login
+Trainee --> Profile
+Trainee --> Apply
+Trainee --> OwnRequests
+Trainee --> Withdraw
+Trainee --> Balance
+
+Instructor --> Login
+Instructor --> Review
+Instructor --> Approve
+Instructor --> Reject
+Instructor --> History
+Instructor --> Absences
+
+Admin --> Login
+Admin --> Users
+Admin --> Assign
+Admin --> Entitlements
+Admin --> AllRequests
+Admin --> Absences
+Admin --> Statistics
+
+@enduml

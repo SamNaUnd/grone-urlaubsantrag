@@ -107,3 +107,18 @@ und Urlaubskontingenten steht noch aus.
 Die Tests verwenden eine eigene temporäre Datenbank. Bestehende lokale Konten
 und Anträge werden dabei nicht geändert. Die Prüfung des JSON-Schemas ersetzt
 noch keine erfolgreiche Bereitstellung bei Render.
+
+## Datenübernahme nach Neon: 20.11.2026
+
+Vor der Übernahme wurde eine private PostgreSQL-Sicherung angelegt und die
+leere Zieldatenbank geprüft. Die Übernahme erfolgte in einer Transaktion.
+Alle Tabelleninhalte einschließlich Passwort-Hashes und Einladungszuständen
+sowie die Identitätssequenzen stimmen mit der lokalen Quelle überein.
+Zeitstempel wurden beim Vergleich einheitlich in UTC dargestellt.
+
+Das Produktionspaket startet erfolgreich gegen Neon PostgreSQL 18.7.
+TLS-Zertifikat und Servername werden mit der Java-Vertrauenskette geprüft.
+Flyway bestätigt beide vorhandenen Migrationen; Hibernate bestätigt das
+Schema. `/api/health` meldet Anwendung und Datenbank als `UP`, und die
+Ersteinrichtung bleibt für das übernommene Verwaltungskonto gesperrt.
+Die lokale Datenbank wurde durch die Übernahme nicht verändert.

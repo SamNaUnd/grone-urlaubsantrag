@@ -36,13 +36,14 @@ ausgelöst. Vor einem Branchwechsel auch diese Einstellung aktualisieren.
 Format der JDBC-Adresse ohne Passwort:
 
 ```text
-jdbc:postgresql://HOST/DATENBANK?sslmode=verify-full
+jdbc:postgresql://HOST/DATENBANK?sslmode=verify-full&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory
 ```
 
 HOST und DATENBANK durch die Angaben des Neon-Projekts ersetzen. Eine direkte
 Neon-Verbindung verwenden, damit Datenbankmigrationen und die Anwendung
 dieselbe Verbindungskonfiguration nutzen. Benutzername und Passwort getrennt
-hinterlegen. Die Zertifikatsprüfung bleibt eingeschaltet.
+hinterlegen. Die Zertifikatsprüfung bleibt eingeschaltet; die Anwendung nutzt
+die vertrauenswürdigen Zertifizierungsstellen der Java-Laufzeit.
 
 4. Vor dem Erstellen kontrollieren: genau ein Web Service, Plan **Free**,
    keine kostenpflichtigen Zusatzdienste oder Datenträger.

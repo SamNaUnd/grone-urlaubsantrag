@@ -22,3 +22,12 @@ coverage/
 # Operating system files
 .DS_Store
 Thumbs.db
+
+# Local database files and private settings
+.local/
+*.mv.db
+*.trace.db
+*.dump
+*.sql.gz
+test-results/
+playwright-report/

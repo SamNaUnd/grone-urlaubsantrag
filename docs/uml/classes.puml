@@ -15,48 +15,67 @@ enum LeaveStatus {
   WITHDRAWN
 }
 
-enum Decision {
-  APPROVED
-  REJECTED
-}
-
-class User {
+class UserAccount {
   id: Long
   firstName: String
   lastName: String
   email: String
   passwordHash: String
   role: Role
+  active: boolean
+  credentialsVersion: int
 }
 
 class Trainee {
   id: Long
   trainingProgram: String
-  annualLeaveEntitlement: Decimal
+  trainingLocation: String
+  federalState: String
+}
+
+class LeaveEntitlement {
+  id: Long
+  traineeId: Long
+  year: int
+  days: int
 }
 
 class LeaveRequest {
   id: Long
   startDate: LocalDate
   endDate: LocalDate
-  totalDays: Decimal
+  totalDays: int
   reason: String
   status: LeaveStatus
-  createdAt: LocalDateTime
+  createdAt: Instant
 }
 
 class Approval {
   id: Long
-  decision: Decision
+  decision: LeaveStatus
   comment: String
-  decisionDate: LocalDateTime
+  decisionDate: Instant
 }
 
-User "1" -- "0..1" Trainee : trainee profile
-User "1" -- "0..*" Trainee : supervises
+UserAccount "1" -- "0..1" Trainee : trainee profile
+class RegistrationInvitation {
+  id: Long
+  codeHash: String
+  role: Role
+  instructorId: Long
+  entitlementYear: int
+  entitlementDays: int
+  expiresAt: Instant
+  redeemedAt: Instant
+  revokedAt: Instant
+}
+UserAccount "1" -- "0..*" RegistrationInvitation : creates
+
+UserAccount "1" -- "0..*" Trainee : supervises
+Trainee "1" -- "0..*" LeaveEntitlement : annual allowance
 Trainee "1" -- "0..*" LeaveRequest : submits
 LeaveRequest "1" -- "0..1" Approval : receives
-User "1" -- "0..*" Approval : decides
+UserAccount "1" -- "0..*" Approval : decides
 
 note bottom of Trainee
   The supervising user must

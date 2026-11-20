@@ -10,6 +10,9 @@ entity "users" as users {
   * email : VARCHAR <<UNIQUE>>
   * password_hash : VARCHAR
   * role : VARCHAR
+  * active : BOOLEAN
+  * credentials_version : INTEGER
+  * created_at : TIMESTAMPTZ
 }
 
 entity "trainees" as trainees {
@@ -20,7 +23,14 @@ entity "trainees" as trainees {
   * training_program : VARCHAR
   * training_location : VARCHAR
   * federal_state : VARCHAR
-  * annual_leave_entitlement : NUMERIC
+}
+
+entity "leave_entitlements" as entitlements {
+  * id : BIGINT <<PK>>
+  --
+  * trainee_id : BIGINT <<FK>>
+  * leave_year : INTEGER
+  * days : INTEGER
 }
 
 entity "leave_requests" as requests {
@@ -29,10 +39,10 @@ entity "leave_requests" as requests {
   * trainee_id : BIGINT <<FK>>
   * start_date : DATE
   * end_date : DATE
-  * total_days : NUMERIC
-  reason : TEXT
+  * total_days : INTEGER
+  * reason : VARCHAR(2000)
   * status : VARCHAR
-  * created_at : TIMESTAMP
+  * created_at : TIMESTAMPTZ
 }
 
 entity "approvals" as approvals {
@@ -41,13 +51,31 @@ entity "approvals" as approvals {
   * leave_request_id : BIGINT <<FK, UNIQUE>>
   * approver_id : BIGINT <<FK>>
   * decision : VARCHAR
-  comment : TEXT
-  * decision_date : TIMESTAMP
+  * comment : VARCHAR(2000)
+  * decision_date : TIMESTAMPTZ
 }
 
 users ||--o| trainees : "has trainee profile"
+entity "registration_invitations" as invitations {
+  * id : BIGINT <<PK>>
+  --
+  * code_hash : VARCHAR(64) <<UNIQUE>>
+  * role : VARCHAR
+  training_program : VARCHAR
+  instructor_id : BIGINT <<FK>>
+  * entitlement_year : INTEGER
+  * entitlement_days : INTEGER
+  * created_by_id : BIGINT <<FK>>
+  * created_at : TIMESTAMPTZ
+  * expires_at : TIMESTAMPTZ
+  redeemed_at : TIMESTAMPTZ
+  revoked_at : TIMESTAMPTZ
+}
+users ||--o{ invitations : "creates / instructor assignment"
+
 users ||--o{ trainees : "supervises"
 trainees ||--o{ requests : "submits"
+trainees ||--o{ entitlements : "annual allowance"
 requests ||--o| approvals : "receives"
 users ||--o{ approvals : "decides"
 
@@ -66,5 +94,10 @@ end note
 note bottom of approvals
   Decision: APPROVED or REJECTED
   A rejection requires a reason.
+end note
+
+note bottom of entitlements
+  UNIQUE (trainee_id, leave_year)
+  0 <= days <= 366
 end note
 @enduml

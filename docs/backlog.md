@@ -1,5 +1,12 @@
 # Product Backlog
 
+## Implementierungsstand
+
+Die Kernfunktionen US-01 bis US-13 sind lokal implementiert und werden durch
+automatisierte Backend- und Browserprüfungen abgesichert. Die User Stories
+sind bis zur persönlichen Prüfung und Zusammenführung über einen Pull Request
+noch nicht endgültig abgeschlossen.
+
 | ID | User Story | Priority |
 |---|---|---|
 | US-01 | Als Benutzer möchte ich mich sicher anmelden, damit ich meine Funktionen nutzen kann. | Hoch |

@@ -5,6 +5,12 @@ verwenden Anmeldung und API dieselbe HTTPS-Adresse. Auf dem Rechner der
 Ausbilderin ist nur ein Browser erforderlich; der Entwicklungsrechner muss
 nicht eingeschaltet bleiben.
 
+Die Anwendung ist unter
+[grone-urlaubsantrag.onrender.com](https://grone-urlaubsantrag.onrender.com)
+erreichbar. Vorhandene Konten und Einladungszustände wurden aus der lokalen
+Datenbank übernommen und überprüft. Für die Ausbilderin genügt dieser Link
+mit einem persönlichen Ausbilder-Einladungscode.
+
 ## Kostenlose Bereitstellung
 
 - Render: ein Web Service, Plan `free`, Region Frankfurt.
@@ -12,7 +18,7 @@ nicht eingeschaltet bleiben.
 - Render-Datenbanken werden nicht angelegt: deren kostenloser Tarif läuft
   nach 30 Tagen ab.
 - Render beendet den laufenden Web Service nach 15 Minuten ohne Nutzung.
-  Der nächste Aufruf benötigt ungefähr eine Minute zum Starten.
+  Der nächste Aufruf kann etwa ein bis drei Minuten zum Starten benötigen.
 - Kostenlose Tarife haben Nutzungsgrenzen. Vor einem Tarifwechsel Kosten und
   aktuelle Bedingungen beim jeweiligen Anbieter prüfen.
 

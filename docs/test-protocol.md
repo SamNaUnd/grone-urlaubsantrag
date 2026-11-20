@@ -102,7 +102,7 @@ und Urlaubskontingenten steht noch aus.
 | `render.yaml`, offizielles JSON-Schema | Gültig |
 | JAR-Inhalt | Frontend und Produktionsprofil vorhanden; keine lokalen Geheimnisdateien |
 | Produktions-HTTP-Prüfung | Oberfläche erreichbar, private API geschützt, Secure-/HttpOnly-/SameSite-Cookies und weitergeleitetes HTTPS geprüft |
-| Docker-Image und öffentliche Bereitstellung | Noch nicht geprüft; lokal ist Docker nicht installiert |
+| Docker-Image und öffentliche Bereitstellung | Bei Render erfolgreich gebaut und veröffentlicht |
 
 Die Tests verwenden eine eigene temporäre Datenbank. Bestehende lokale Konten
 und Anträge werden dabei nicht geändert. Die Prüfung des JSON-Schemas ersetzt
@@ -122,3 +122,19 @@ Flyway bestätigt beide vorhandenen Migrationen; Hibernate bestätigt das
 Schema. `/api/health` meldet Anwendung und Datenbank als `UP`, und die
 Ersteinrichtung bleibt für das übernommene Verwaltungskonto gesperrt.
 Die lokale Datenbank wurde durch die Übernahme nicht verändert.
+
+## Öffentliche Bereitstellung: 20.11.2026
+
+Render hat den Docker-Build des Commits `5b4f6e1` im kostenlosen Tarif in
+Frankfurt erfolgreich veröffentlicht. Die Anwendung ist unter
+`https://grone-urlaubsantrag.onrender.com` erreichbar.
+
+Die öffentliche Prüfung bestätigt HTTPS, erreichbare Frontend-Dateien,
+Datenbankstatus `UP`, gesperrte Ersteinrichtung, sichere Sitzungscookies
+und HTTP 401 für geschützte Endpunkte ohne Anmeldung. Ein Neustart verliert
+die Sitzungen, aber keine Konten oder Anträge in PostgreSQL. Automatische
+Programmbereitstellungen sind ausgeschaltet.
+
+Die veröffentlichte Anmeldeseite wurde zusätzlich mit einem versteckten
+Browser bei 1440 und 390 Pixel Breite geprüft: keine JavaScript-Fehler,
+Anmeldeformular sichtbar, mobil kein horizontaler Seitenüberlauf.

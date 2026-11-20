@@ -3,6 +3,15 @@
 Eine Webanwendung zur digitalen Verwaltung von Urlaubsanträgen
 für Auszubildende bei Grone.
 
+## Online testen
+
+[Grone Urlaubsverwaltung öffnen](https://grone-urlaubsantrag.onrender.com)
+
+Bestehende Konten können sich mit ihren bisherigen Zugangsdaten anmelden.
+Neue Personen registrieren sich mit einem persönlichen Einladungscode der
+Verwaltung. Nach längerer Inaktivität kann der erste Aufruf im kostenlosen
+Hostingtarif etwa ein bis drei Minuten benötigen.
+
 ## Geplante Funktionen
 
 - Anmeldung mit drei Rollen: Auszubildende, Ausbilder und Verwaltung

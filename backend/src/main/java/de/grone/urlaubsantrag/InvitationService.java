@@ -23,19 +23,29 @@ public class InvitationService {
     }
 
     public List<InvitationView> list() {
-        accounts.require(Role.ADMIN);
-        return invitations.findAllByOrderByCreatedAtDesc().stream().map(this::view).toList();
+        var caller=invitationManager();
+        var visible=caller.role==Role.ADMIN ? invitations.findAllByOrderByCreatedAtDesc()
+                : invitations.findByCreatedByIdAndRoleAndInstructorIdOrderByCreatedAtDesc(caller.id,Role.TRAINEE,caller.id);
+        return visible.stream().map(this::view).toList();
     }
 
     @Transactional
     public CreatedInvitation create(CreateInvitation input) {
-        var creator=accounts.require(Role.ADMIN);
+        var creator=invitationManager();
+        Long instructorId=input.instructorId();
+        if (creator.role==Role.INSTRUCTOR) {
+            if (input.role()!=Role.TRAINEE)
+                throw error(FORBIDDEN,"Ausbilder können nur Auszubildende einladen.");
+            if (instructorId!=null && !instructorId.equals(creator.id))
+                throw error(FORBIDDEN,"Sie können nur Ihre eigenen Auszubildenden einladen.");
+            instructorId=creator.id;
+        }
         if (input.role()!=Role.TRAINEE && input.role()!=Role.INSTRUCTOR)
             throw error(BAD_REQUEST,"Einladungscodes sind nur für Ausbilder und Auszubildende vorgesehen.");
         if (input.role()==Role.TRAINEE) {
-            if (input.instructorId()==null || input.trainingProgram()==null || input.trainingProgram().isBlank())
+            if (instructorId==null || input.trainingProgram()==null || input.trainingProgram().isBlank())
                 throw error(BAD_REQUEST,"Für Auszubildende sind Ausbilder und Ausbildungsbereich erforderlich.");
-            var instructor=accounts.user(input.instructorId());
+            var instructor=accounts.user(instructorId);
             if (!instructor.active || instructor.role!=Role.INSTRUCTOR)
                 throw error(BAD_REQUEST,"Wählen Sie einen aktiven Ausbilder.");
         }
@@ -46,7 +56,7 @@ public class InvitationService {
         invitation.expiresAt=clock.instant().plus(Duration.ofDays(input.validDays()));
         invitation.entitlementYear=input.year();
         invitation.entitlementDays=input.role()==Role.TRAINEE?input.days():0;
-        invitation.instructorId=input.role()==Role.TRAINEE?input.instructorId():null;
+        invitation.instructorId=input.role()==Role.TRAINEE?instructorId:null;
         invitation.trainingProgram=input.role()==Role.TRAINEE?input.trainingProgram().strip():null;
         invitations.saveAndFlush(invitation);
         return new CreatedInvitation(view(invitation),code);
@@ -67,10 +77,20 @@ public class InvitationService {
 
     @Transactional
     public void revoke(Long id) {
-        accounts.require(Role.ADMIN);
+        var caller=invitationManager();
         var invitation=invitations.lockById(id).orElseThrow(() -> error(NOT_FOUND,"Einladung nicht gefunden."));
+        if (caller.role!=Role.ADMIN && (invitation.role!=Role.TRAINEE
+                || !caller.id.equals(invitation.createdById) || !caller.id.equals(invitation.instructorId)))
+            throw error(FORBIDDEN,"Sie können nur Ihre eigenen Auszubildenden-Codes widerrufen.");
         if (invitation.redeemedAt!=null) throw error(CONFLICT,"Dieser Code wurde bereits verwendet.");
         invitation.revokedAt=clock.instant(); invitations.save(invitation);
+    }
+
+    private UserAccount invitationManager() {
+        var caller=accounts.current();
+        if (caller.role!=Role.ADMIN && caller.role!=Role.INSTRUCTOR)
+            throw error(FORBIDDEN,"Für diese Aktion fehlt die Berechtigung.");
+        return caller;
     }
 
     private InvitationView view(RegistrationInvitation i) {

@@ -90,6 +90,10 @@ Ein Antrag enthält:
   registrieren: `AB-` für Ausbilder und `AZ-` für Auszubildende. Die Verwaltung
   legt Rolle, Ausbildungsbereich, Ausbilder und Jahreskontingent fest. Codes
   sind befristet und können vor der Einlösung widerrufen werden.
+- Ausbilder können selbst Auszubildendencodes für ihre eigenen Trainees
+  ausstellen, das anfängliche Jahreskontingent festlegen und eigene Codes
+  widerrufen. Die Zuordnung zum einladenden Ausbilder erfolgt serverseitig.
+  Sie können weder Ausbildercodes ausstellen noch fremde Codes verwalten.
 - Die API prüft Rollen und aktive Konten bei jeder geschützten Fachaktion.
 - Bei nicht erreichbarer Feiertags-API wird kein Antrag mit ungeprüfter
   Tageszahl angelegt. Erfolgreich geladene Jahresdaten werden 24 Stunden zwischengespeichert.

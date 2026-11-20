@@ -37,6 +37,7 @@ interface ApprovalRepository extends JpaRepository<Approval, Long> {
 
 interface InvitationRepository extends JpaRepository<RegistrationInvitation,Long> {
     List<RegistrationInvitation> findAllByOrderByCreatedAtDesc();
+    List<RegistrationInvitation> findByCreatedByIdAndRoleAndInstructorIdOrderByCreatedAtDesc(Long createdById,Role role,Long instructorId);
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select i from RegistrationInvitation i where i.codeHash = :hash")
     Optional<RegistrationInvitation> lockByCodeHash(@Param("hash") String hash);

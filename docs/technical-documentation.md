@@ -42,6 +42,10 @@ Bei einer fehlgeschlagenen Registrierung bleibt der Code unbenutzt.
 Die maßgebliche SQL-Struktur liegt unter
 `backend/src/main/resources/db/migration/V1__initial_schema.sql`.
 Die Einladungstabelle wird über `V2__registration_invitations.sql` ergänzt.
+Die Verwaltung kann beide Einladungsrollen verwalten. Ausbilder dürfen nur
+eigene Auszubildendencodes ausstellen, auflisten und widerrufen. Der Server
+erzwingt die Zuordnung zum angemeldeten Ausbilder und lehnt andere Rollen
+oder fremde Zuordnungen ab. Dafür ist keine weitere Datenbankmigration nötig.
 Nach ihrer ersten Anwendung wird diese Datei nicht verändert; weitere
 Strukturänderungen erhalten neue Flyway-Migrationen.
 

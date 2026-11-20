@@ -21,21 +21,28 @@ interface Created {
   code: string
 }
 
-export function Invitations({ users, year }: { users: User[]; year: number }) {
+export function Invitations({ users, year, me }: {
+  users: User[]
+  year: number
+  me: User
+}) {
+  const isInstructor = me.role === 'INSTRUCTOR'
   const [invitations, setInvitations] = useState<Invitation[]>([])
   const [revision, setRevision] = useState(0)
   const [open, setOpen] = useState(false)
-  const [role, setRole] = useState<'INSTRUCTOR' | 'TRAINEE'>('INSTRUCTOR')
+  const [role, setRole] = useState<'INSTRUCTOR' | 'TRAINEE'>(
+    isInstructor ? 'TRAINEE' : 'INSTRUCTOR',
+  )
   const [created, setCreated] = useState<Created | null>(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [copied, setCopied] = useState(false)
-  const instructors = users.filter(
-    (user) => user.active && user.role === 'INSTRUCTOR',
-  )
+  const instructors = isInstructor
+    ? [me]
+    : users.filter((user) => user.active && user.role === 'INSTRUCTOR')
   useEffect(() => {
     const controller = new AbortController()
-    api<Invitation[]>('/admin/invitations', { signal: controller.signal })
+    api<Invitation[]>('/invitations', { signal: controller.signal })
       .then(setInvitations)
       .catch((err) => {
         if (!controller.signal.aborted) setError(errorMessage(err))
@@ -49,14 +56,16 @@ export function Invitations({ users, year }: { users: User[]; year: number }) {
     const f = new FormData(event.currentTarget)
     try {
       setCreated(
-        await api<Created>('/admin/invitations', {
+        await api<Created>('/invitations', {
           method: 'POST',
           body: JSON.stringify({
             role,
             trainingProgram:
               role === 'TRAINEE' ? f.get('trainingProgram') : null,
             instructorId:
-              role === 'TRAINEE' ? Number(f.get('instructorId')) : null,
+              role === 'TRAINEE' && !isInstructor
+                ? Number(f.get('instructorId'))
+                : null,
             year,
             days: Number(f.get('days') ?? 0),
             validDays: Number(f.get('validDays')),
@@ -74,7 +83,7 @@ export function Invitations({ users, year }: { users: User[]; year: number }) {
     setBusy(true)
     setError('')
     try {
-      await api(`/admin/invitations/${id}/revoke`, { method: 'PUT' })
+      await api(`/invitations/${id}/revoke`, { method: 'PUT' })
       setRevision((value) => value + 1)
     } catch (err) {
       setError(errorMessage(err))
@@ -102,8 +111,9 @@ export function Invitations({ users, year }: { users: User[]; year: number }) {
         <div>
           <h2>Einladungscodes</h2>
           <p>
-            Getrennte Codes für Ausbilder und Auszubildende. Persönliche Daten
-            und Passwort werden selbst eingegeben.
+            {isInstructor
+              ? 'Laden Sie Ihre Auszubildenden ein. Neue Konten werden automatisch Ihnen zugeordnet.'
+              : 'Getrennte Codes für Ausbilder und Auszubildende. Persönliche Daten und Passwort werden selbst eingegeben.'}
           </p>
         </div>
         <button
@@ -227,7 +237,8 @@ export function Invitations({ users, year }: { users: User[]; year: number }) {
             </div>
           ) : (
             <form className="form-stack" onSubmit={create}>
-              <Field label="Rolle der Einladung">
+              {!isInstructor && (
+                <Field label="Rolle der Einladung">
                 <select
                   value={role}
                   onChange={(e) =>
@@ -237,13 +248,21 @@ export function Invitations({ users, year }: { users: User[]; year: number }) {
                   <option value="INSTRUCTOR">Ausbilder (AB-)</option>
                   <option value="TRAINEE">Auszubildende (AZ-)</option>
                 </select>
-              </Field>
+                </Field>
+              )}
+              {isInstructor && (
+                <div className="notice">
+                  Auszubildende geben bei der Registrierung ihre persönlichen
+                  Daten und ein eigenes Passwort ein.
+                </div>
+              )}
               {role === 'TRAINEE' && (
                 <>
                   <Field label="Ausbildungsbereich">
                     <input name="trainingProgram" maxLength={150} required />
                   </Field>
-                  <Field label="Zuständiger Ausbilder">
+                  {!isInstructor && (
+                    <Field label="Zuständiger Ausbilder">
                     <select name="instructorId" defaultValue="" required>
                       <option value="">Bitte auswählen</option>
                       {instructors.map((user) => (
@@ -252,7 +271,8 @@ export function Invitations({ users, year }: { users: User[]; year: number }) {
                         </option>
                       ))}
                     </select>
-                  </Field>
+                    </Field>
+                  )}
                   <Field label={`Urlaubskontingent ${year}`}>
                     <input
                       name="days"

@@ -41,9 +41,9 @@ Header `X-CSRF-TOKEN` mit dem zuvor abgerufenen Token.
 | POST | `/api/admin/users` | Verwaltung; Konto anlegen |
 | PUT | `/api/admin/users/{id}` | Verwaltung; Konto aktualisieren |
 | PUT | `/api/admin/users/{id}/password` | Verwaltung; `{password}` |
-| GET | `/api/admin/invitations` | Verwaltung; Einladungen ohne vollständige Codes auflisten |
-| POST | `/api/admin/invitations` | Verwaltung; rollengebundenen Code erzeugen |
-| PUT | `/api/admin/invitations/{id}/revoke` | Verwaltung; unbenutzten Code widerrufen |
+| GET | `/api/invitations` | Verwaltung: alle; Ausbilder: nur eigene Auszubildendencodes, ohne vollständige Codes |
+| POST | `/api/invitations` | Verwaltung: AB-/AZ-Code; Ausbilder: AZ-Code für eigene Auszubildende |
+| PUT | `/api/invitations/{id}/revoke` | Verwaltung oder ausstellender Ausbilder; unbenutzten Code widerrufen |
 
 Sichtbar bedeutet: eigenes Profil für Auszubildende, zugeordnete Profile für
 Ausbilder, alle Profile für die Verwaltung. Passwort-Hashes werden niemals
@@ -75,11 +75,19 @@ formularbasierte Anmeldung und den CSRF-Header.
 
 ## Einladungscodes
 
-`POST /api/admin/invitations` erwartet `role` (`INSTRUCTOR` oder `TRAINEE`),
+`POST /api/invitations` erwartet `role` (`INSTRUCTOR` oder `TRAINEE`),
 `year`, `days` und `validDays` (1 bis 30). Für Auszubildende sind zusätzlich
 `trainingProgram` und `instructorId` erforderlich. Der vollständige Code wird
 nur in dieser Antwort einmal ausgegeben. Die Datenbank speichert seinen
 SHA-256-Hash.
+
+Für Ausbilder ist ausschließlich `TRAINEE` erlaubt. `instructorId` kann
+entfallen; der Server setzt immer das angemeldete Ausbilderkonto. Eine fremde
+Zuordnung wird mit HTTP 403 abgelehnt. Liste und Widerruf sind auf selbst
+ausgestellte, dem eigenen Konto zugeordnete Auszubildendencodes begrenzt.
+Auszubildende können keine Codes verwalten. Verwaltungskonten behalten die
+Gesamtübersicht. Die bisherigen `/api/admin/invitations`-Pfade bleiben als
+Alias mit derselben rollenabhängigen Prüfung erhalten.
 
 `POST /api/auth/register` erwartet `code`, `firstName`, `lastName`, `email`
 und `password`. Die Rolle und das Ausbildungsprofil werden ausschließlich aus

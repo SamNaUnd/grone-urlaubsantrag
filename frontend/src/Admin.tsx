@@ -121,7 +121,7 @@ export function Admin({
           </div>
         )}
       </div>
-      <Invitations users={users} year={year} />
+      <Invitations users={users} year={year} me={me} />
       {(create || editing) && (
         <UserForm
           key={editing?.id ?? 'new'}

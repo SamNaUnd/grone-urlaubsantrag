@@ -138,3 +138,16 @@ Programmbereitstellungen sind ausgeschaltet.
 Die veröffentlichte Anmeldeseite wurde zusätzlich mit einem versteckten
 Browser bei 1440 und 390 Pixel Breite geprüft: keine JavaScript-Fehler,
 Anmeldeformular sichtbar, mobil kein horizontaler Seitenüberlauf.
+
+## Ausbilder laden eigene Auszubildende ein: 20.11.2026
+
+- Backend `verify`: 31 Tests erfolgreich.
+- Frontend: Build und ESLint erfolgreich.
+- Browser: 3 Tests erfolgreich; zusätzlicher Ablauf vom Ausbildercode für
+  Auszubildende bis zur Registrierung, Startkontingent und automatischen Zuordnung.
+- Ausbilder können keine Ausbilder- oder Verwaltungscodes erstellen, keine
+  fremden Ausbilder zuweisen und keine fremden Codes auflisten oder widerrufen.
+- Deaktivierte Konten und Auszubildende erhalten keinen Verwaltungszugriff
+  auf Einladungscodes. CSRF-Schutz und die einmalige Einlösung bleiben aktiv.
+- Prüfungen verwenden ausschließlich eine isolierte Testdatenbank. Die
+  vorhandenen Onlinekonten und Einladungscodes werden nicht verändert.

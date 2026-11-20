@@ -9,7 +9,7 @@ für Auszubildende bei Grone.
 
 Bestehende Konten können sich mit ihren bisherigen Zugangsdaten anmelden.
 Neue Personen registrieren sich mit einem persönlichen Einladungscode der
-Verwaltung. Nach längerer Inaktivität kann der erste Aufruf im kostenlosen
+Verwaltung oder ihres Ausbilders. Nach längerer Inaktivität kann der erste Aufruf im kostenlosen
 Hostingtarif etwa ein bis drei Minuten benötigen.
 
 ## Geplante Funktionen
@@ -81,6 +81,12 @@ Auszubildende. Die eingeladenen Personen wählen auf der Anmeldeseite
 **Mit Einladungscode registrieren** und geben ihre echten Daten und ein
 eigenes Passwort ein. Die Verwaltung legt Rolle, Ausbilderzuordnung und
 Jahreskontingent fest. Codes sind einmalig, befristet und widerrufbar.
+
+Ausbilder können unter **Auszubildende → Einladungscodes → Code erstellen**
+selbst Auszubildende einladen und dabei Ausbildungsbereich und Startkontingent
+festlegen. Die Registrierung ordnet diese automatisch dem einladenden Ausbilder
+zu. Ausbilder können nur ihre eigenen Auszubildendencodes sehen und widerrufen;
+Ausbildercodes bleiben der Verwaltung vorbehalten.
 
 ## Funktionen
 

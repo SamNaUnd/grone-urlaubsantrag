@@ -246,6 +246,33 @@ test('separate instructor and trainee invitation registration', async ({
   ).toBeVisible()
 })
 
+test('instructor invites own trainee without access to instructor codes', async ({ page }) => {
+  await page.goto('/')
+  await login(page, 'invited-instructor@example.test')
+  await page.getByRole('navigation').getByRole('button', { name: 'Auszubildende', exact: true }).click()
+  await page.getByRole('button', { name: 'Code erstellen', exact: true }).click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog.getByLabel('Rolle der Einladung')).toHaveCount(0)
+  await expect(dialog.getByLabel('Zuständiger Ausbilder')).toHaveCount(0)
+  await dialog.getByLabel('Ausbildungsbereich').fill('Einladung durch Ausbilder')
+  await dialog.getByLabel(/^Urlaubskontingent/).fill('26')
+  await dialog.getByRole('button', { name: 'Code erstellen', exact: true }).click()
+  const code = await dialog.getByLabel('Einladungscode', { exact: true }).inputValue()
+  expect(code).toMatch(/^AZ-/)
+  await dialog.getByRole('button', { name: 'Fertig', exact: true }).click()
+  await page.screenshot({ path: 'test-results/instructor-invitations.png', fullPage: true })
+  await page.getByRole('button', { name: 'Abmelden' }).click()
+  await register(page, code, 'Einladung', 'Eigenes Ausbildungskonto', 'instructor-own-trainee@example.test')
+  await login(page, 'instructor-own-trainee@example.test')
+  await expect(page.locator('.metric').first().locator('strong')).toHaveText('26')
+  await page.getByRole('navigation').getByRole('button', { name: 'Mein Profil', exact: true }).click()
+  await expect(page.getByText('Einladung Ausbilderkonto', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Abmelden' }).click()
+  await login(page, 'invited-instructor@example.test')
+  await page.getByRole('navigation').getByRole('button', { name: 'Auszubildende', exact: true }).click()
+  await expect(page.getByText('Einladung Eigenes Ausbildungskonto', { exact: true })).toBeVisible()
+})
+
 async function register(
   page: Page,
   code: string,

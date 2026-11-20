@@ -275,7 +275,7 @@ class LeaveWorkflowTest {
                 .content(registration(code,"unused-email@example.test"))).andExpect(status().isCreated());
     }
 
-    @Test void invitationManagementIsAdminOnlyAndCannotCreateAdminCodes() throws Exception {
+    @Test void traineesCannotManageInvitationsAndAdminCodesAreNotSupported() throws Exception {
         String json="{\"role\":\"INSTRUCTOR\",\"year\":2027,\"days\":0,\"validDays\":7}";
         mvc.perform(post("/api/admin/invitations").with(user("trainee@example.test")).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isForbidden());
@@ -283,6 +283,76 @@ class LeaveWorkflowTest {
             .andExpect(status().isBadRequest());
         mvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON).content(registration("not-valid","test@example.test")))
             .andExpect(status().isForbidden());
+    }
+
+    @Test void instructorInvitesTraineeAssignedToSelfWithChosenAllowance() throws Exception {
+        Long instructor=users.findByEmail("instructor@example.test").orElseThrow().id;
+        String code=inviteAs("instructor@example.test","TRAINEE",null,"Eigener Ausbildungsbereich",24);
+        assertTrue(code.startsWith("AZ-"));
+        mvc.perform(post("/api/auth/register").with(csrf()).contentType(MediaType.APPLICATION_JSON)
+                .content(registration(code,"instructor-invited@example.test")))
+            .andExpect(status().isCreated()).andExpect(jsonPath("$.role").value("TRAINEE"))
+            .andExpect(jsonPath("$.instructorId").value(instructor));
+        var profile=trainees.findByUserId(users.findByEmail("instructor-invited@example.test").orElseThrow().id).orElseThrow();
+        assertEquals(24,entitlements.findByTraineeIdAndYear(profile.id,2027).orElseThrow().days);
+        mvc.perform(get("/api/trainees").with(user("instructor@example.test")))
+            .andExpect(jsonPath("$[?(@.email == 'instructor-invited@example.test')]").isNotEmpty());
+        mvc.perform(get("/api/trainees").with(user("other-instructor@example.test")))
+            .andExpect(content().json("[]"));
+    }
+
+    @Test void instructorCannotCreateOtherRolesOrAssignAnotherInstructor() throws Exception {
+        Long other=users.findByEmail("other-instructor@example.test").orElseThrow().id;
+        for (String role:List.of("INSTRUCTOR","ADMIN")) {
+            mvc.perform(post("/api/invitations").with(user("instructor@example.test")).with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"role\":\""+role+"\",\"year\":2027,\"days\":0,\"validDays\":7}"))
+                .andExpect(status().isForbidden());
+        }
+        mvc.perform(post("/api/invitations").with(user("instructor@example.test")).with(csrf())
+                .contentType(MediaType.APPLICATION_JSON).content("{\"role\":\"TRAINEE\",\"trainingProgram\":\"Bereich\",\"instructorId\":"+other+",\"year\":2027,\"days\":20,\"validDays\":7}"))
+            .andExpect(status().isForbidden());
+        assertEquals(0,invitations.count());
+    }
+
+    @Test void instructorCanOnlyListAndRevokeOwnTraineeInvitations() throws Exception {
+        Long instructor=users.findByEmail("instructor@example.test").orElseThrow().id;
+        invite("INSTRUCTOR",null,null,0);
+        invite("TRAINEE",instructor,"Von Verwaltung",20);
+        inviteAs("other-instructor@example.test","TRAINEE",null,"Anderer Bereich",20);
+        var foreignIds=invitations.findAll().stream().map(i -> i.id).toList();
+        String ownCode=inviteAs("instructor@example.test","TRAINEE",null,"Eigener Bereich",20);
+        var own=invitations.findAll().stream().filter(i -> !foreignIds.contains(i.id)).findFirst().orElseThrow();
+        mvc.perform(get("/api/invitations").with(user("instructor@example.test")))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].id").value(own.id)).andExpect(jsonPath("$[0].role").value("TRAINEE"))
+            .andExpect(jsonPath("$[0].code").doesNotExist()).andExpect(jsonPath("$[0].codeHash").doesNotExist());
+        mvc.perform(get("/api/invitations").with(user("admin@example.test")))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(4));
+        for (Long id:foreignIds) {
+            mvc.perform(put("/api/invitations/"+id+"/revoke").with(user("instructor@example.test")).with(csrf()))
+                .andExpect(status().isForbidden());
+            assertNull(invitations.findById(id).orElseThrow().revokedAt);
+        }
+        mvc.perform(get("/api/invitations").with(user("trainee@example.test"))).andExpect(status().isForbidden());
+        mvc.perform(put("/api/invitations/"+own.id+"/revoke").with(user("trainee@example.test")).with(csrf()))
+            .andExpect(status().isForbidden());
+        mvc.perform(put("/api/invitations/"+own.id+"/revoke").with(user("instructor@example.test")))
+            .andExpect(status().isForbidden());
+        mvc.perform(put("/api/invitations/"+own.id+"/revoke").with(user("instructor@example.test")).with(csrf()))
+            .andExpect(status().isNoContent());
+        mvc.perform(post("/api/auth/register").with(csrf()).contentType(MediaType.APPLICATION_JSON)
+                .content(registration(ownCode,"revoked-own@example.test"))).andExpect(status().isBadRequest());
+    }
+
+    @Test void deactivatedInstructorCannotManageInvitations() throws Exception {
+        var instructor=users.findByEmail("instructor@example.test").orElseThrow();
+        instructor.active=false; users.saveAndFlush(instructor);
+        mvc.perform(get("/api/invitations").with(user("instructor@example.test"))).andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/invitations").with(user("instructor@example.test")).with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"role\":\"TRAINEE\",\"trainingProgram\":\"Bereich\",\"year\":2027,\"days\":20,\"validDays\":7}"))
+            .andExpect(status().isUnauthorized());
     }
 
     @Test void concurrentRedemptionCreatesOnlyOneAccount() throws Exception {
@@ -298,8 +368,12 @@ class LeaveWorkflowTest {
     }
 
     private String invite(String role,Long instructor,String program,int days) throws Exception {
+        return inviteAs("admin@example.test",role,instructor,program,days);
+    }
+
+    private String inviteAs(String creator,String role,Long instructor,String program,int days) throws Exception {
         String json="{\"role\":\""+role+"\",\"year\":2027,\"days\":"+days+",\"validDays\":7,\"instructorId\":"+instructor+",\"trainingProgram\":"+(program==null?"null":"\""+program+"\"")+"}";
-        var result=mvc.perform(post("/api/admin/invitations").with(user("admin@example.test")).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json))
+        var result=mvc.perform(post("/api/invitations").with(user(creator)).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isCreated()).andReturn();
         return com.jayway.jsonpath.JsonPath.read(result.getResponse().getContentAsString(),"$.code");
     }

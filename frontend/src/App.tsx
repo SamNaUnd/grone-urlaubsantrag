@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { api, ApiError, clearCsrf, errorMessage } from './api'
 import { Auth } from './Auth'
 import { Admin } from './Admin'
+import { Invitations } from './Invitations'
 import { Holidays } from './Holidays'
 import { Profile } from './Profile'
 import { NewRequest, RequestDetails } from './RequestForms'
@@ -592,6 +593,7 @@ function App() {
                 </section>
               )}
               {page === 'team' && (
+                <>
                 <section className="panel">
                   <div className="panel-heading">
                     <div>
@@ -609,7 +611,9 @@ function App() {
                   {!data.trainees.length ? (
                     <Empty
                       title="Noch keine Zuordnungen"
-                      text="Die Verwaltung kann Auszubildende anlegen und einem Ausbilder zuordnen."
+                      text={user.role === 'INSTRUCTOR'
+                        ? 'Erstellen Sie unten einen Einladungscode für Ihre Auszubildenden. Nach deren Registrierung die Seite neu laden.'
+                        : 'Die Verwaltung kann Auszubildende anlegen und einem Ausbilder zuordnen.'}
                     />
                   ) : (
                     <div className="table-scroll">
@@ -670,6 +674,8 @@ function App() {
                     </div>
                   )}
                 </section>
+                {user.role === 'INSTRUCTOR' && <Invitations users={[]} year={year} me={user} />}
+                </>
               )}
               {page === 'admin' && user.role === 'ADMIN' && (
                 <Admin

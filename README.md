@@ -22,6 +22,9 @@ für Auszubildende bei Grone.
 
 Die Kernfunktionen sind lokal implementiert: Anmeldung, Urlaubsanträge,
 Genehmigungen, Verwaltung und rollenabhängige Übersichten.
+Für den Betrieb unter einer gemeinsamen HTTPS-Adresse stehen ein Docker-Build
+und eine kostenlose Render-Konfiguration bereit. Die Veröffentlichung benötigt
+eine externe PostgreSQL-Datenbank. Siehe [Onlinebetrieb](docs/hosting.md).
 
 ## Voraussetzungen
 
@@ -109,13 +112,14 @@ Konten in PostgreSQL. Die Tests benötigen das zuvor gebaute Backend-JAR.
 - [Technische Dokumentation](docs/technical-documentation.md)
 - [API und Anmeldung](docs/api.md)
 - [Testkonzept und Testprotokoll](docs/test-protocol.md)
+- [Onlinebetrieb mit Render und Neon](docs/hosting.md)
 - [Product Backlog](docs/backlog.md)
 - [Entwicklungsplanung](docs/sprint-plan.md)
 - [UML- und ER-Diagramme](docs/uml)
 
 ## Persönliche Daten und lokale Dateien
 
-Namen und E-Mail-Adressen werden erst bei der Einrichtung in der lokalen
+Namen und E-Mail-Adressen werden erst bei der Einrichtung in der konfigurierten
 Datenbank gespeichert. Passwörter werden als BCrypt-Hashes gespeichert.
 Zugangsdaten, Datenbanken, Einrichtungscodes, Testberichte und lokale
 Einstellungen sind von Git ausgeschlossen. Reale Personendaten gehören nicht

@@ -3,6 +3,7 @@ package de.grone.urlaubsantrag;
 import java.time.*;
 import java.util.Locale;
 import org.springframework.context.annotation.*;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -27,6 +28,7 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http,UserRepository users) throws Exception {
         http.authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.GET, "/", "/index.html", "/favicon.svg", "/assets/**").permitAll()
                 .requestMatchers("/api/health", "/api/auth/csrf", "/api/auth/register", "/api/setup/**", "/error").permitAll()
                 .anyRequest().authenticated());
         http.requestCache(cache -> cache.disable());

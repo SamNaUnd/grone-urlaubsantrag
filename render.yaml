@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: grone-urlaubsantrag
+    runtime: docker
+    plan: free
+    region: frankfurt
+    branch: leave-management
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeployTrigger: 'off'
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: production
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: SETUP_TOKEN
+        generateValue: true

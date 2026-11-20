@@ -90,3 +90,20 @@ npm.cmd run test:e2e
 Die Desktop- und Mobilansichten wurden zusätzlich anhand der erzeugten
 Screenshots überprüft. Eine persönliche Abnahme mit den tatsächlichen Konten
 und Urlaubskontingenten steht noch aus.
+
+## Prüfung des Hostingpakets: 20.11.2026
+
+| Prüfung | Ergebnis |
+|---|---|
+| Backend mit eingebettetem Frontend, `verify` | 27 Tests erfolgreich |
+| Frontend, Build und ESLint | Erfolgreich |
+| Browsertests direkt gegen das gemeinsame JAR | 2 erfolgreich, einschließlich beider Einladungsrollen |
+| Produktionsprofil mit 256 MB Java-Heap | Browsertests erfolgreich; lokale HTTP-Cookies nur im Test erlaubt |
+| `render.yaml`, offizielles JSON-Schema | Gültig |
+| JAR-Inhalt | Frontend und Produktionsprofil vorhanden; keine lokalen Geheimnisdateien |
+| Produktions-HTTP-Prüfung | Oberfläche erreichbar, private API geschützt, Secure-/HttpOnly-/SameSite-Cookies und weitergeleitetes HTTPS geprüft |
+| Docker-Image und öffentliche Bereitstellung | Noch nicht geprüft; lokal ist Docker nicht installiert |
+
+Die Tests verwenden eine eigene temporäre Datenbank. Bestehende lokale Konten
+und Anträge werden dabei nicht geändert. Die Prüfung des JSON-Schemas ersetzt
+noch keine erfolgreiche Bereitstellung bei Render.

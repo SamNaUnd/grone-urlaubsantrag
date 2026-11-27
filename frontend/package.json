@@ -1,5 +1,5 @@
 {
-  "name": "frontend",
+  "name": "grone-urlaubsantrag-frontend",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:e2e": "node scripts/browser-tests.mjs test",
+    "test:install": "node scripts/browser-tests.mjs install chromium"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.4",
@@ -17,6 +19,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.65.1",
     "@types/node": "^24.19.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",

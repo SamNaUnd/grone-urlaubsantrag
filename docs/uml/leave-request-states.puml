@@ -1,0 +1,35 @@
+@startuml
+!include _style.iuml
+title Zustände eines Urlaubsantrags
+caption Nur offene Anträge können zurückgezogen oder entschieden werden
+left to right direction
+state "OPEN\nOffen" as Open
+state "APPROVED\nGenehmigt" as Approved
+state "REJECTED\nAbgelehnt" as Rejected
+state "WITHDRAWN\nZurückgezogen" as Withdrawn
+[*] --> Open : zulässigen Antrag erstellen
+Open --> Approved : zugeordneter Ausbilder genehmigt\nKontingent erneut geprüft
+Open --> Rejected : zugeordneter Ausbilder lehnt ab\nBegründung erforderlich
+Open --> Withdrawn : antragstellende Person zieht zurück
+note top of Open
+  Beantragte Tage sind bereits reserviert.
+  Keine Überschneidung mit OPEN oder APPROVED.
+end note
+note right of Approved
+  Tage bleiben gebunden.
+  Vergangen: genommen; sonst: geplant genehmigt.
+  Dies ist eine Auswertung, kein weiterer Status.
+  Keine Rücknahme in dieser Version.
+end note
+note bottom of Rejected
+  Reservierung wird freigegeben.
+end note
+note bottom of Withdrawn
+  Reservierung wird freigegeben.
+end note
+legend bottom
+  Änderungen werden pro Ausbildungsprofil unter einer Datenbanksperre serialisiert.
+  Wiederholte Entscheidung oder Rücknahme nach Bearbeitung: HTTP 409.
+  Abgelehnte oder zurückgezogene Anträge werden nicht erneut geöffnet.
+endlegend
+@enduml

@@ -1,0 +1,43 @@
+@startuml
+!include _style.iuml
+title Systemarchitektur und Onlinebetrieb
+caption Eine öffentliche HTTPS-Adresse · Konten und Anträge liegen dauerhaft in PostgreSQL
+left to right direction
+actor "Auszubildende / Ausbilder / Verwaltung" as Person
+node Browser {
+  component "React + TypeScript + Tailwind\nBenutzeroberfläche" as UI
+}
+node "Render · Frankfurt · Free\nDocker-Container · Java 21" as Render {
+  artifact "Gebautes Frontend\nstatische Dateien im JAR" as Static
+  component "Spring Security\nSitzung, CSRF, BCrypt" as Security
+  component "ApiController\nInvitationController" as Controllers
+  component "AccountService / LeaveService\nInvitationService / SetupService" as Services
+  component "HolidayService\n24-Stunden-Cache" as Holidays
+  component "Spring Data JPA + Hibernate\nFlyway-Migrationen" as Persistence
+}
+database "Neon · Frankfurt · Free\nPostgreSQL" as DB
+cloud "Nager.Date\nGesetzliche Feiertage" as Nager
+rectangle "GitHub-Repository\nQuellcode + Dockerfile + render.yaml" as Git
+Person --> UI : bedient
+Static --> UI : HTTPS: HTML, CSS, JavaScript
+UI --> Security : HTTPS /api/*\nSitzungscookie + CSRF-Token
+Security --> Controllers : authentifizierte Anfrage
+Controllers --> Services : Fachaktion
+Controllers --> Holidays : Feiertagsübersicht
+Services --> Holidays : Berliner Arbeitstage
+Services --> Persistence : Daten lesen / schreiben
+Persistence --> DB : JDBC über TLS\nZertifikat und Hostname prüfen
+Holidays --> Nager : HTTPS: Jahr und Land DE
+Git ..> Render : manueller Build und Deploy
+note bottom of Render
+  Frontend und API haben denselben Ursprung.
+  Sichere HttpOnly-/SameSite-Sitzungscookies.
+  Erneute Anmeldung nach Neustart erforderlich.
+  Container-Dateisystem ist nicht dauerhaft.
+end note
+note bottom of DB
+  Benutzer, Passwort-Hashes, Profile, Kontingente,
+  Anträge, Entscheidungen und Einladungshashes.
+  Der Entwicklungsrechner darf ausgeschaltet sein.
+end note
+@enduml

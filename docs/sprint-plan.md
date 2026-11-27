@@ -1,5 +1,16 @@
 # Sprint-Planung
 
+## Aktueller Rahmen
+
+Einzelprojekt ohne festen Abgabetermin. Die folgenden Sprints dienen als
+Entwicklungsphasen. Product-Owner-Aufgaben, Planung und Entwicklung werden
+von derselben Person wahrgenommen; es wird kein separates Scrum-Team oder
+externes Review behauptet. Ein GitHub-Board kann diese Phasen später abbilden.
+
+Planung, Projektgrundlage und die Kernfunktionen der Phasen 2 und 3 sind lokal
+umgesetzt. Die aktuelle Phase umfasst Tests, Dokumentation und anschließende
+Überprüfung der tatsächlichen fachlichen Details. Ein Merge steht noch aus.
+
 ## Sprint 1: Planung und Projektgrundlage
 
 Ziel: Anforderungen und technische Grundlage vorbereiten.

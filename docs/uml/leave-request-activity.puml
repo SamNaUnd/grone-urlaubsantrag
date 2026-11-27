@@ -1,4 +1,7 @@
 @startuml
+!include _style.iuml
+title Ablauf eines Urlaubsantrags
+caption Ganze Arbeitstage · Berlin · Ein Kalenderjahr pro Antrag
 start
 
 partition "Auszubildende" {
@@ -18,13 +21,26 @@ if (Angaben gültig und ausreichend Urlaub?) then (ja)
   }
 
   partition "System" {
+    :Anmeldung, Rolle und CSRF prüfen\nZeitraum und Kontingent serverseitig erneut prüfen;
+    if (Serverprüfung erfolgreich?) then (ja)
+    else (nein)
+      :Fehler anzeigen; Antrag nicht speichern;
+      stop
+    endif
     :Antrag mit Status OPEN speichern;
+    :Beantragte Tage im Kontingent reservieren;
   }
 
   if (Vor Bearbeitung zurückgezogen?) then (ja)
     partition "System" {
       :Berechtigung und Status prüfen;
+      if (Eigener Antrag und Status OPEN?) then (ja)
+      else (nein)
+        :Zugriffs- oder Statusfehler anzeigen;
+        stop
+      endif
       :Status auf WITHDRAWN setzen;
+      :Reservierung freigeben;
     }
     stop
   else (nein)
@@ -34,6 +50,11 @@ if (Angaben gültig und ausreichend Urlaub?) then (ja)
 
     partition "System" {
       :Zuordnung und Status OPEN prüfen;
+      if (Zugeordnet und noch offen?) then (ja)
+      else (nein)
+        :Zugriffs- oder Statusfehler anzeigen;
+        stop
+      endif
     }
 
     if (Antrag genehmigen?) then (ja)
@@ -41,13 +62,14 @@ if (Angaben gültig und ausreichend Urlaub?) then (ja)
         :Urlaubskontingent erneut prüfen;
       }
 
-      if (Ausreichend Urlaub verfügbar?) then (ja)
+      if (Gebundene Urlaubstage durch Kontingent gedeckt?) then (ja)
         partition "System" {
           :Genehmigung und Status APPROVED\nin einer Transaktion speichern;
+          :Reservierte Tage als genehmigte Tage führen;
         }
       else (nein)
         partition "System" {
-          :Konflikt anzeigen;\nAntrag bleibt OPEN;
+          :Konflikt anzeigen\nAntrag bleibt OPEN;
         }
         stop
       endif
@@ -56,9 +78,15 @@ if (Angaben gültig und ausreichend Urlaub?) then (ja)
         :Ablehnungsgrund eingeben;
       }
 
-      partition "System" {
-        :Ablehnung und Status REJECTED\nin einer Transaktion speichern;
-      }
+      if (Begründung vorhanden?) then (ja)
+        partition "System" {
+          :Ablehnung und Status REJECTED\nin einer Transaktion speichern;
+          :Reservierung freigeben;
+        }
+      else (nein)
+        :Eingabefehler anzeigen (400)\nAntrag bleibt OPEN;
+        stop
+      endif
     endif
   endif
 
@@ -71,5 +99,12 @@ else (nein)
   }
 endif
 
+note right
+  Die Vorschau ersetzt keine Serverprüfung.
+  Änderungen sperren das Ausbildungsprofil.
+  Fehler ändern keinen bestehenden Antragsstatus.
+  Feiertagsdienst nicht erreichbar: 503.
+  Fremder Zugriff: 403; bereits bearbeitet: 409.
+end note
 stop
 @enduml

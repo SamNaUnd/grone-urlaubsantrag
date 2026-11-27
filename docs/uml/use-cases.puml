@@ -1,9 +1,13 @@
 @startuml
+!include _style.iuml
+title Rollen und Anwendungsfälle
+caption Grone Urlaubsverwaltung · Fachliche Berechtigungen
 left to right direction
 
 actor "Auszubildende" as Trainee
 actor "Ausbilder" as Instructor
 actor "Verwaltung" as Admin
+actor "Eingeladene Person" as Guest
 
 rectangle "Grone Urlaubsantrag" {
   usecase "Anmelden" as Login
@@ -24,6 +28,11 @@ rectangle "Grone Urlaubsantrag" {
   usecase "Urlaubskontingente verwalten" as Entitlements
   usecase "Alle Anträge einsehen" as AllRequests
   usecase "Statistiken einsehen" as Statistics
+  usecase "Mit Einladungscode registrieren" as Register
+  usecase "Eigene AZ-Einladungscodes\nerstellen und widerrufen" as InviteOwn
+  usecase "AB- und AZ-Einladungscodes\nverwalten" as Invites
+  usecase "Eigenes Passwort ändern" as Password
+  usecase "Berliner Feiertage ansehen" as Holidays
 }
 
 Trainee --> Login
@@ -34,11 +43,13 @@ Trainee --> Withdraw
 Trainee --> Balance
 
 Instructor --> Login
+Instructor --> Profile
 Instructor --> Review
 Instructor --> Approve
 Instructor --> Reject
 Instructor --> History
 Instructor --> Absences
+Instructor --> InviteOwn
 
 Admin --> Login
 Admin --> Users
@@ -47,5 +58,26 @@ Admin --> Entitlements
 Admin --> AllRequests
 Admin --> Absences
 Admin --> Statistics
+Admin --> Profile
+Admin --> Invites
+Guest --> Register
+Trainee --> Password
+Instructor --> Password
+Admin --> Password
+Trainee --> Holidays
+Instructor --> Holidays
+Admin --> Holidays
+
+note right of InviteOwn
+  Nur TRAINEE; Zuordnung zum eigenen Konto.
+  Ausbildungsbereich und Startkontingent festlegen.
+  Keine Ausbildercodes und keine fremden Codes.
+end note
+
+note bottom of Invites
+  Nur die Verwaltung kann Ausbildercodes ausstellen.
+  Das erste Verwaltungskonto entsteht separat
+  über einen privaten Einrichtungscode.
+end note
 
 @enduml

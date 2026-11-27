@@ -1,4 +1,8 @@
 @startuml
+!include _style.iuml
+title Urlaubsantrag technisch einreichen
+caption Sitzung, CSRF, Datumsbereich, Feiertage und Kontingent werden serverseitig geprüft
+autonumber
 actor "Auszubildende" as Trainee
 participant "React Frontend" as Frontend
 participant "Spring Boot Backend" as Backend
@@ -6,9 +10,9 @@ database "PostgreSQL" as DB
 participant "Nager.Date API" as Holidays
 
 Trainee -> Frontend : Urlaubszeitraum eingeben und absenden
-Frontend -> Backend : POST /api/leave-requests
+Frontend -> Backend : POST /api/leave-requests\nSitzungscookie + X-CSRF-TOKEN
 
-Backend -> Backend : Anmeldung und Rolle prüfen
+Backend -> Backend : Anmeldung, CSRF und aktive TRAINEE-Rolle prüfen
 
 alt Nicht angemeldet oder nicht berechtigt
   Backend --> Frontend : 401 oder 403
@@ -20,10 +24,10 @@ else Berechtigt
     Backend --> Frontend : 400 Bad Request
     Frontend --> Trainee : Eingaben korrigieren
   else Gültige Eingaben
-    Backend -> DB : Ausbildungsprofil und Standort laden
+    Backend -> DB : Ausbildungsprofil laden und sperren\naktiven zugeordneten Ausbilder prüfen
     DB --> Backend : Profildaten
 
-    loop Für jedes betroffene Jahr
+    opt Kein gültiger Feiertags-Cacheeintrag (24 Stunden)
       Backend -> Holidays : GET /api/v3/PublicHolidays/{year}/DE
       Holidays --> Backend : Feiertage oder Fehler
     end
@@ -36,12 +40,18 @@ else Berechtigt
       Backend -> DB : Urlaubsanspruch und relevante Anträge laden
       DB --> Backend : Daten zur Kontingentprüfung
       Backend -> Backend : Antrag und Kontingent prüfen
+      note right of Backend
+        Ein Kalenderjahr pro Antrag.
+        Überschneidung mit OPEN / APPROVED: 409.
+        Ausbilder nicht verfügbar: 409.
+        Ungültiger Datumsbereich: 400.
+      end note
 
       alt Keine Urlaubstage oder Kontingent überschritten
         Backend --> Frontend : 422 Unprocessable Entity
         Frontend --> Trainee : Fehlermeldung anzeigen
       else Antrag zulässig
-        Backend -> DB : Antrag mit Status OPEN speichern
+        Backend -> DB : Antrag als OPEN speichern\nTransaktion abschließen / Sperre freigeben
         DB --> Backend : Gespeicherter Antrag
         Backend --> Frontend : 201 Created mit Antrag
         Frontend --> Trainee : Bestätigung und Status anzeigen
@@ -49,4 +59,9 @@ else Berechtigt
     end
   end
 end
+note over Backend, DB
+  OPEN reserviert die beantragten Tage bereits.
+  Gleichzeitige Änderungen desselben Profils werden serialisiert.
+  Bei Fehlern wird kein neuer Antrag erfolgreich gespeichert.
+end note
 @enduml

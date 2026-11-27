@@ -1,0 +1,57 @@
+@startuml
+!include _style.iuml
+title Einladung und Registrierung
+caption Ein persönlicher Code pro Person · Codes sind befristet und einmalig
+start
+partition "Einladende Person" {
+  :Als Verwaltung oder Ausbilder anmelden;
+  :Einladung mit Gültigkeit und gegebenenfalls\nAusbildungsbereich / Jahreskontingent anlegen;
+}
+partition System {
+  if (Angemeldet als Ausbilder?) then (ja)
+    :Nur TRAINEE erlauben und Zuordnung\nzum eigenen Ausbilderkonto erzwingen;
+  else (Verwaltung)
+    :TRAINEE oder INSTRUCTOR erlauben\nbei TRAINEE aktiven Ausbilder prüfen;
+  endif
+  :Zufälligen AB- oder AZ-Code erzeugen\nSHA-256-Hash und Einladungsdaten speichern;
+}
+partition "Einladende Person" {
+  :Vollständigen Code einmalig anzeigen lassen;
+  :Code privat an die eingeladene Person weitergeben;
+}
+partition "Eingeladene Person" {
+  :„Mit Einladungscode registrieren“ wählen;
+  :Code, echte Daten und eigenes Passwort eingeben;
+}
+partition System {
+  :CSRF und Eingaben prüfen\nEinladung anhand des Code-Hashes sperren;
+  if (Code vorhanden, nicht abgelaufen,\nnicht verwendet und nicht widerrufen?) then (ja)
+    :Rolle und Zuordnung ausschließlich\naus der Einladung übernehmen;
+  else (nein)
+    :Registrierung ablehnen (400);
+    stop
+  endif
+  if (E-Mail frei und Kontoangaben gültig?) then (ja)
+    :Konto mit BCrypt-Passwort-Hash anlegen;
+  else (nein)
+    :Fehler zurückgeben; Transaktion zurückrollen\nEinladung bleibt unverbraucht;
+    stop
+  endif
+  if (Einladungsrolle TRAINEE?) then (ja)
+    :Ausbildungsprofil mit zugewiesenem Ausbilder\nund Kontingent für das Einladungsjahr anlegen;
+  else (INSTRUCTOR)
+    :Ausbilderkonto ohne Ausbildungsprofil verwenden;
+  endif
+  :Einladung als eingelöst markieren\nKonto und Einlösung gemeinsam festschreiben;
+}
+partition "Eingeladene Person" {
+  :Mit eigener E-Mail und eigenem Passwort anmelden;
+}
+stop
+legend bottom
+  Verwaltung: alle Einladungen sichtbar und widerrufbar.
+  Ausbilder: nur selbst erstellte AZ-Codes für das eigene Konto.
+  Auszubildende: keine Verwaltung von Einladungscodes.
+  Ein Verwaltungskonto kann nicht über einen Einladungscode entstehen.
+endlegend
+@enduml

@@ -1,4 +1,7 @@
 @startuml
+!include _style.iuml
+title Fachliches Klassenmodell
+caption Grone Urlaubsverwaltung · Domänenklassen und ihre Beziehungen
 hide circle
 skinparam classAttributeIconSize 0
 
@@ -24,10 +27,13 @@ class UserAccount {
   role: Role
   active: boolean
   credentialsVersion: int
+  createdAt: Instant
 }
 
 class Trainee {
   id: Long
+  userId: Long
+  instructorId: Long
   trainingProgram: String
   trainingLocation: String
   federalState: String
@@ -42,6 +48,7 @@ class LeaveEntitlement {
 
 class LeaveRequest {
   id: Long
+  traineeId: Long
   startDate: LocalDate
   endDate: LocalDate
   totalDays: int
@@ -52,39 +59,56 @@ class LeaveRequest {
 
 class Approval {
   id: Long
+  leaveRequestId: Long
+  approverId: Long
   decision: LeaveStatus
   comment: String
   decisionDate: Instant
 }
 
-UserAccount "1" -- "0..1" Trainee : trainee profile
+UserAccount "1" -- "0..1" Trainee : besitzt Ausbildungsprofil
 class RegistrationInvitation {
   id: Long
   codeHash: String
   role: Role
+  trainingProgram: String
   instructorId: Long
   entitlementYear: int
   entitlementDays: int
+  createdById: Long
+  createdAt: Instant
   expiresAt: Instant
   redeemedAt: Instant
   revokedAt: Instant
 }
-UserAccount "1" -- "0..*" RegistrationInvitation : creates
+UserAccount "1" -- "0..*" RegistrationInvitation : erstellt
+UserAccount "0..1" -- "0..*" RegistrationInvitation : zugeordneter Ausbilder
 
-UserAccount "1" -- "0..*" Trainee : supervises
-Trainee "1" -- "0..*" LeaveEntitlement : annual allowance
-Trainee "1" -- "0..*" LeaveRequest : submits
-LeaveRequest "1" -- "0..1" Approval : receives
-UserAccount "1" -- "0..*" Approval : decides
+UserAccount "1" -- "0..*" Trainee : betreut als Ausbilder
+Trainee "1" -- "0..*" LeaveEntitlement : hat Jahreskontingente
+Trainee "1" -- "0..*" LeaveRequest : stellt Anträge
+LeaveRequest "1" -- "0..1" Approval : erhält Entscheidung
+UserAccount "1" -- "0..*" Approval : entscheidet als Ausbilder
+UserAccount ..> Role
+RegistrationInvitation ..> Role
+LeaveRequest ..> LeaveStatus
+Approval ..> LeaveStatus
 
 note bottom of Trainee
-  The supervising user must
-  have the INSTRUCTOR role.
+  Die betreuende Person muss aktiv sein
+  und die Rolle INSTRUCTOR besitzen.
 end note
 
 note bottom of Approval
-  Only the assigned instructor
-  may decide an open request.
+  Nur der zugeordnete Ausbilder entscheidet.
+  Entscheidung: APPROVED oder REJECTED.
+  Pro Antrag höchstens eine Entscheidung.
+end note
+
+note bottom of RegistrationInvitation
+  Verwaltung erstellt AB- und AZ-Einladungen.
+  Ausbilder erstellen nur AZ-Codes für eigene Trainees.
+  Nur der SHA-256-Hash des Codes wird gespeichert.
 end note
 
 @enduml

@@ -1,4 +1,7 @@
 @startuml
+!include _style.iuml
+title Datenbankmodell
+caption PostgreSQL · PK = Primärschlüssel · FK = Fremdschlüssel · * = NOT NULL
 hide circle
 skinparam linetype ortho
 
@@ -55,7 +58,7 @@ entity "approvals" as approvals {
   * decision_date : TIMESTAMPTZ
 }
 
-users ||--o| trainees : "has trainee profile"
+users ||--o| trainees : user_id
 entity "registration_invitations" as invitations {
   * id : BIGINT <<PK>>
   --
@@ -71,20 +74,26 @@ entity "registration_invitations" as invitations {
   redeemed_at : TIMESTAMPTZ
   revoked_at : TIMESTAMPTZ
 }
-users ||--o{ invitations : "creates / instructor assignment"
+users ||--o{ invitations : created_by_id
+users |o--o{ invitations : instructor_id
 
-users ||--o{ trainees : "supervises"
-trainees ||--o{ requests : "submits"
-trainees ||--o{ entitlements : "annual allowance"
-requests ||--o| approvals : "receives"
-users ||--o{ approvals : "decides"
+users ||--o{ trainees : instructor_id
+trainees ||--o{ requests : trainee_id
+trainees ||--o{ entitlements : trainee_id
+requests ||--o| approvals : leave_request_id
+users ||--o{ approvals : approver_id
+
+entity application_lock <<Technisch>> {
+  * id : INTEGER <<PK>>
+}
+entity "flyway_schema_history\nMigrationsmetadaten" as flyway <<Framework>> #F0F0F0
 
 note bottom of users
-  Roles: TRAINEE, INSTRUCTOR, ADMIN
+  Rollen: TRAINEE, INSTRUCTOR, ADMIN
 end note
 
 note bottom of requests
-  Status: OPEN, APPROVED,
+  Zustände: OPEN, APPROVED,
   REJECTED, WITHDRAWN
 
   end_date >= start_date
@@ -92,12 +101,21 @@ note bottom of requests
 end note
 
 note bottom of approvals
-  Decision: APPROVED or REJECTED
-  A rejection requires a reason.
+  Entscheidung: APPROVED oder REJECTED.
+  Eine Ablehnung erfordert eine Begründung.
 end note
 
 note bottom of entitlements
   UNIQUE (trainee_id, leave_year)
   0 <= days <= 366
+end note
+note bottom of invitations
+  Rolle: TRAINEE oder INSTRUCTOR.
+  TRAINEE erfordert Ausbildungsbereich und Ausbilder.
+  Einlösung und Widerruf werden als Zeitpunkt gespeichert.
+end note
+note bottom of application_lock
+  Einzelner Datensatz mit id = 1.
+  Serialisiert die erste Verwaltungseinrichtung.
 end note
 @enduml

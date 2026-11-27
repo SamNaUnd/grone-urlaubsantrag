@@ -130,7 +130,7 @@ Konten in PostgreSQL. Die Tests benötigen das zuvor gebaute Backend-JAR.
 - [Onlinebetrieb mit Render und Neon](docs/hosting.md)
 - [Product Backlog](docs/backlog.md)
 - [Entwicklungsplanung](docs/sprint-plan.md)
-- [UML- und ER-Diagramme](docs/uml)
+- [Grafische UML-, ER- und Architekturdiagramme](docs/uml/README.md)
 
 ## Persönliche Daten und lokale Dateien
 
